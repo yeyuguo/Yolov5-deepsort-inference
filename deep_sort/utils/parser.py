@@ -18,9 +18,9 @@ class YamlParser(edict):
         super(YamlParser, self).__init__(cfg_dict)
 
     
-    def merge_from_file(self, config_file):
-        with open(config_file, 'r') as fo:
-            self.update(yaml.load(fo.read()))
+    def merge_from_file(self, cfg_filename):
+        with open(cfg_filename, 'r') as fo:
+            self.update(yaml.load(fo.read(), Loader=yaml.SafeLoader))
 
     
     def merge_from_dict(self, config_dict):

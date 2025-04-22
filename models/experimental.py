@@ -135,9 +135,22 @@ def attempt_load(weights, map_location=None):
     for w in weights if isinstance(weights, list) else [weights]:
         attempt_download(w)
         try:
-            model.append(torch.load(w, map_location=map_location)['model'].float().fuse().eval())  # load FP32 model
-        except Exception:
-            model.append(torch.load(w, map_location=map_location).float().fuse().eval())  # load FP32 model
+            # 加载模型并处理可能的字典格式
+            ckpt = torch.load(w, map_location=map_location, weights_only=False)
+            if isinstance(ckpt, dict) and 'model' in ckpt:
+                ckpt = ckpt['model']  # 提取模型
+            model.append(ckpt.float().fuse().eval())  # load FP32 model
+        except Exception as e:
+            print(f"Error loading model: {e}")
+            try:
+                # 尝试另一种加载方式
+                ckpt = torch.load(w, map_location=map_location, weights_only=False)
+                if isinstance(ckpt, dict) and 'model' in ckpt:
+                    ckpt = ckpt['model']  # 提取模型
+                model.append(ckpt.float().fuse().eval())  # load FP32 model
+            except Exception as e:
+                print(f"Failed to load model: {e}")
+                raise
 
     # Compatibility updates
     for m in model.modules():
